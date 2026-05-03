@@ -19,11 +19,12 @@ import {
 } from 'lucide-react';
 import { DISHES, GALLERY_IMAGES } from './constants';
 
-type Tab = 'home' | 'menu' | 'book' | 'gallery' | 'profile';
+type Tab = 'home' | 'menu' | 'events' | 'book' | 'gallery' | 'story' | 'contact' | 'profile';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,12 +34,20 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const closeMenu = (tab: Tab) => {
+    setActiveTab(tab);
+    setMobileMenuOpen(false);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'home': return <HomeScreen onNavigate={(tab) => setActiveTab(tab)} />;
       case 'menu': return <MenuScreen />;
+      case 'events': return <EventsScreen />;
       case 'book': return <BookScreen />;
       case 'gallery': return <GalleryScreen />;
+      case 'story': return <StoryScreen />;
+      case 'contact': return <ContactScreen />;
       case 'profile': return <ProfileScreen />;
       default: return <HomeScreen onNavigate={(tab) => setActiveTab(tab)} />;
     }
@@ -51,18 +60,17 @@ export default function App() {
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('home')}>
           <img src="https://i.postimg.cc/RCRF7vPq/Ayani-logo.jpg" alt="Ayini" className="h-10 object-contain" />
         </div>
-        <div className="flex items-center gap-10 font-serif tracking-[0.2em] uppercase text-xs">
-          {(['home', 'menu', 'gallery'] as const).map((item) => (
+        <div className="flex items-center gap-8 font-serif tracking-[0.2em] uppercase text-[10px] xl:text-xs">
+          {(['home', 'menu', 'events', 'gallery', 'story', 'contact'] as const).map((item) => (
             <button 
               key={item} 
               onClick={() => setActiveTab(item)}
-              className={`hover:text-gold transition-colors cursor-pointer ${activeTab === item ? 'text-gold' : 'text-white/60'}`}
+              className={`hover:text-gold transition-all cursor-pointer relative group ${activeTab === item ? 'text-gold' : 'text-white/60'}`}
             >
-              {item}
+              {item.replace('story', 'Our Story')}
+              <span className={`absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full ${activeTab === item ? 'w-full' : ''}`} />
             </button>
           ))}
-          <button className="text-white/60 hover:text-gold transition-colors cursor-pointer">Our Story</button>
-          <button className="text-white/60 hover:text-gold transition-colors cursor-pointer">Contact</button>
         </div>
         <button 
           onClick={() => setActiveTab('book')}
@@ -73,15 +81,65 @@ export default function App() {
       </nav>
 
       {/* Mobile Top Bar */}
-      <header className="md:hidden glass fixed top-0 left-0 w-full z-40 px-6 py-4 flex justify-between items-center">
+      <header className="md:hidden glass fixed top-0 left-0 w-full z-40 px-6 py-4 flex justify-between items-center transition-all duration-300">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('home')}>
           <img src="https://i.postimg.cc/RCRF7vPq/Ayani-logo.jpg" alt="Ayini" className="h-8 object-contain" />
         </div>
-        <button className="relative p-2 text-white/80">
-          <Bell size={20} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-gold rounded-full" />
-        </button>
+        <div className="flex items-center gap-4">
+          <button className="relative p-2 text-white/80">
+            <Bell size={20} />
+          </button>
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 text-gold transition-transform active:scale-90"
+          >
+            {mobileMenuOpen ? <Plus className="rotate-45" size={24} /> : (
+              <div className="flex flex-col gap-1.5 w-6">
+                <div className="h-0.5 w-full bg-current rounded-full" />
+                <div className="h-0.5 w-2/3 bg-current rounded-full self-end" />
+                <div className="h-0.5 w-full bg-current rounded-full" />
+              </div>
+            )}
+          </button>
+        </div>
       </header>
+
+      {/* Mobile Full Screen Menu overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-[60] glass flex flex-col p-8 pt-24"
+          >
+            <div className="flex flex-col gap-8 items-center text-center">
+              {(['home', 'menu', 'events', 'gallery', 'story', 'contact'] as const).map((item) => (
+                <button 
+                  key={item}
+                  onClick={() => closeMenu(item)}
+                  className={`font-serif text-3xl tracking-tight transition-colors ${activeTab === item ? 'text-gold' : 'text-white/60'}`}
+                >
+                  {item.charAt(0).toUpperCase() + item.slice(1).replace('story', ' Story')}
+                </button>
+              ))}
+              <div className="w-12 h-px bg-gold/20 my-4" />
+              <button 
+                onClick={() => closeMenu('book')}
+                className="bg-gold text-charcoal px-12 py-4 rounded-full font-serif tracking-widest text-sm uppercase"
+              >
+                Book a Table
+              </button>
+            </div>
+            
+            <div className="mt-auto pb-12 flex justify-center gap-8 text-white/20">
+              <User size={24} onClick={() => closeMenu('profile')} />
+              <Bell size={24} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Content Area */}
       <main className="pb-24 md:pb-0 min-h-screen">
@@ -102,7 +160,7 @@ export default function App() {
       <nav className="md:hidden glass fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 rounded-t-3xl border-t border-white/5">
         <NavButton icon={<HomeIcon size={20} />} label="Home" active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
         <NavButton icon={<UtensilsCrossed size={20} />} label="Menu" active={activeTab === 'menu'} onClick={() => setActiveTab('menu')} />
-        <NavButton icon={<CalendarDays size={20} />} label="Book" active={activeTab === 'book'} onClick={() => setActiveTab('book')} />
+        <NavButton icon={<CalendarDays size={20} />} label="Events" active={activeTab === 'events'} onClick={() => setActiveTab('events')} />
         <NavButton icon={<ImageIcon size={20} />} label="Gallery" active={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} />
         <NavButton icon={<User size={20} />} label="Profile" active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
       </nav>
@@ -111,8 +169,8 @@ export default function App() {
       <footer className="hidden md:flex flex-col items-center py-20 bg-charcoal-light/10 border-t border-white/5">
         <img src="https://i.postimg.cc/RCRF7vPq/Ayani-logo.jpg" alt="Ayini" className="h-12 object-contain mb-8" />
         <div className="flex gap-10 font-serif tracking-[0.2em] uppercase text-[10px] text-white/40 mb-8">
-          <a href="#" className="hover:text-white transition-colors">Privacy</a>
-          <a href="#" className="hover:text-white transition-colors">Terms</a>
+          <a href="#" className="hover:text-white transition-colors" onClick={() => setActiveTab('story')}>Our Story</a>
+          <a href="#" className="hover:text-white transition-colors" onClick={() => setActiveTab('contact')}>Contact</a>
           <a href="#" className="hover:text-white transition-colors">Sustainability</a>
           <a href="#" className="hover:text-white transition-colors">Press</a>
         </div>
@@ -358,7 +416,7 @@ function BookScreen() {
   );
 }
 
-function InputField({ label, placeholder, type = "text", icon }: any) {
+function InputField({ label, placeholder, type = "text", icon, onChange }: any) {
   return (
     <div className="flex flex-col gap-4">
       <label className="text-[10px] uppercase font-sans tracking-[0.3em] font-semibold text-white/40">{label}</label>
@@ -367,6 +425,7 @@ function InputField({ label, placeholder, type = "text", icon }: any) {
         <input 
           type={type} 
           placeholder={placeholder}
+          onChange={onChange}
           className={`w-full bg-white/5 border-b border-gold/30 p-4 ${icon ? 'pl-12' : 'px-4'} text-sm focus:outline-none focus:border-gold transition-all placeholder:text-white/10`}
         />
       </div>
@@ -431,5 +490,202 @@ function ProfileItem({ icon, label }: any) {
       </div>
       <ChevronRight size={14} className="text-white/10 group-hover:text-gold" />
     </button>
+  );
+}
+
+function EventsScreen() {
+  const [step, setStep] = useState(1);
+  const [eventData, setEventData] = useState({
+    type: '',
+    name: '',
+    phone: '',
+    purpose: '',
+    location: 'Main Hall',
+    date: '',
+    slot: 'Lunch (12:00 PM - 3:00 PM)'
+  });
+
+  const eventTypes = [
+    { title: 'Birthday Party', icon: <Plus size={24} className="rotate-45" />, desc: 'Celebrate your special day with a curated heritage menu.' },
+    { title: 'Office Meeting', icon: <Users size={24} />, desc: 'Sophisticated settings for professional discussions.' },
+    { title: 'Family Gathering', icon: <HomeIcon size={24} />, desc: 'Intimate spaces for multi-generational traditions.' }
+  ];
+
+  return (
+    <div className="pt-32 pb-32 px-6 max-w-4xl mx-auto">
+      <header className="text-center mb-16">
+        <h2 className="font-serif text-5xl md:text-6xl mb-6">Signature Events</h2>
+        <p className="text-white/40 tracking-widest uppercase text-[10px]">Step {step} of 2: {step === 1 ? 'Personal Details' : 'Event Selection'}</p>
+      </header>
+
+      <div className="glass p-8 md:p-12 rounded-3xl border border-white/5 space-y-12">
+        {step === 1 ? (
+          <div className="space-y-10 animate-in fade-in duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <InputField label="Full Name" placeholder="Eleanor Vance" onChange={(e: any) => setEventData({...eventData, name: e.target.value})} />
+              <InputField label="Phone Number" placeholder="+1 (555) 000-0000" onChange={(e: any) => setEventData({...eventData, phone: e.target.value})} />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="flex flex-col gap-4">
+                <label className="text-[10px] uppercase font-sans tracking-[0.3em] font-semibold text-white/40">Preferred Location</label>
+                <select 
+                  className="w-full bg-white/5 border-b border-gold/30 p-4 text-sm focus:outline-none focus:border-gold transition-all"
+                  onChange={(e) => setEventData({...eventData, location: e.target.value})}
+                >
+                  <option value="Main Hall">Grand Heritage Hall</option>
+                  <option value="Terrace">Skyline Terrace</option>
+                  <option value="Private">Private Vault Room</option>
+                </select>
+              </div>
+              <InputField label="Purpose of Event" placeholder="e.g. Birthday Celebration, Product Launch" onChange={(e: any) => setEventData({...eventData, purpose: e.target.value})} />
+            </div>
+            <button 
+              disabled={!eventData.name || !eventData.phone || !eventData.purpose}
+              onClick={() => setStep(2)}
+              className="w-full bg-gold text-charcoal py-5 font-bold uppercase tracking-[0.2em] text-xs hover:bg-white transition-all disabled:opacity-20"
+            >
+              Continue to Preferences
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-12 animate-in slide-in-from-right-4 duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {eventTypes.map(t => (
+                <button 
+                  key={t.title}
+                  onClick={() => setEventData({...eventData, type: t.title})}
+                  className={`p-6 rounded-2xl border transition-all text-left flex flex-col gap-4 ${eventData.type === t.title ? 'bg-gold border-gold text-charcoal' : 'glass border-white/5 hover:border-gold/30'}`}
+                >
+                  {t.icon}
+                  <div>
+                    <h4 className="font-serif text-lg mb-1">{t.title}</h4>
+                    <p className={`text-[10px] leading-relaxed ${eventData.type === t.title ? 'text-charcoal/60' : 'text-white/40'}`}>{t.desc}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <InputField label="Event Date" type="date" onChange={(e: any) => setEventData({...eventData, date: e.target.value})} />
+              <div className="flex flex-col gap-4">
+                <label className="text-[10px] uppercase font-sans tracking-[0.3em] font-semibold text-white/40">Select Slot</label>
+                <select 
+                  className="w-full bg-white/5 border-b border-gold/30 p-4 text-sm focus:outline-none focus:border-gold transition-all"
+                  onChange={(e) => setEventData({...eventData, slot: e.target.value})}
+                >
+                  <option>Lunch (12:00 PM - 3:00 PM)</option>
+                  <option>Evening (4:00 PM - 7:00 PM)</option>
+                  <option>Dinner (8:00 PM - 11:00 PM)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button onClick={() => setStep(1)} className="glass px-8 py-5 text-xs font-bold uppercase tracking-widest border border-white/10">Back</button>
+              <button 
+                disabled={!eventData.type || !eventData.date}
+                className="flex-1 bg-gold text-charcoal py-5 font-bold uppercase tracking-[0.2em] text-xs hover:bg-white transition-all disabled:opacity-20"
+              >
+                Confirm Booking Request
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ContactScreen() {
+  const [submitted, setSubmitted] = useState(false);
+
+  return (
+    <div className="pt-32 pb-32 px-6 max-w-6xl mx-auto flex flex-col md:flex-row gap-20">
+      <div className="md:w-1/2">
+        <h2 className="font-serif text-6xl md:text-8xl mb-8 leading-[0.9]">Let's Create <br /> Magic.</h2>
+        <p className="text-white/50 text-lg leading-relaxed max-w-md mb-12">Whether it's a bespoke dining project or a private inquiry, our team is ready to curate your experience.</p>
+        
+        <div className="space-y-8">
+          <div className="flex gap-4 items-center">
+            <div className="w-12 h-12 glass rounded-full flex items-center justify-center text-gold"><MapPin size={20} /></div>
+            <div>
+              <h4 className="text-[10px] uppercase tracking-widest text-white/30 mb-1">Visit Us</h4>
+              <p className="text-sm">74 Heritage Row, Kensington, London</p>
+            </div>
+          </div>
+          <div className="flex gap-4 items-center">
+            <div className="w-12 h-12 glass rounded-full flex items-center justify-center text-gold"><Bell size={20} /></div>
+            <div>
+              <h4 className="text-[10px] uppercase tracking-widest text-white/30 mb-1">Inquiries</h4>
+              <p className="text-sm">concierge@ayini.com</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="md:w-1/2">
+        {submitted ? (
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass p-12 rounded-3xl text-center h-full flex flex-col items-center justify-center">
+            <Sparkles size={60} className="text-gold mb-8" />
+            <h3 className="font-serif text-4xl mb-4">Message Received</h3>
+            <p className="text-white/40 mb-8">Our concierge will review your project confirmation and reach out within 24 hours.</p>
+            <button onClick={() => setSubmitted(false)} className="text-gold uppercase tracking-[0.3em] text-xs font-bold">Send Another</button>
+          </motion.div>
+        ) : (
+          <form className="glass p-10 md:p-12 rounded-3xl space-y-8" onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }}>
+            <InputField label="Client Name" placeholder="Eleanor Vance" />
+            <InputField label="Project Theme / Category" placeholder="Wedding / Corporate / Boutique" />
+            <InputField label="Phone" placeholder="+44 20 7946 0000" />
+            <div className="flex flex-col gap-4">
+              <label className="text-[10px] uppercase font-sans tracking-[0.3em] font-semibold text-white/40">Inquiry Details</label>
+              <textarea className="w-full bg-white/5 border-b border-gold/30 p-4 text-sm focus:outline-none focus:border-gold transition-all min-h-[120px] resize-none" placeholder="How can we assist you?" />
+            </div>
+            <button className="w-full bg-gold text-charcoal py-5 font-bold uppercase tracking-[0.2em] text-xs hover:bg-white transition-all">
+              Confirm Project Inquiry
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StoryScreen() {
+  return (
+    <div className="pt-32 pb-32 px-6 max-w-4xl mx-auto">
+      <div className="relative h-[500px] rounded-3xl overflow-hidden mb-20 shadow-2xl group">
+        <img 
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0ezplN98omUY1H_QrXt1ETXLxnsEgM1LhebFctF3U-_F5DutHeYnfEYjDnplCWiG58WtrYR17OfhAUwI99V6iaHdr3olrh2_L85Bdu0ImxUWrThrhNFxNxeeRL0qJiI4VKAr1L42N6ZP0ZtrS-T1zi4NM648UT7mA_RAhcvjtvYlglb44HEWNfQVkq2r0k3QrHglR8LttHfupkgIkKjRcHHS0FSOeopFnJSGoDL27XrspkiSI5qHjpztLrHjQBKBSfNPZE3vy5K7Q" 
+          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 scale-110 group-hover:scale-100" 
+          alt="Story" 
+        />
+        <div className="absolute inset-0 bg-charcoal/40" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <h2 className="font-serif text-7xl md:text-9xl text-white mix-blend-overlay">Roots.</h2>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
+        <div>
+          <h3 className="font-serif text-4xl mb-8 leading-tight">Preserving Ancient <br /> Alchemy.</h3>
+          <p className="text-white/60 leading-relaxed mb-6">Ayini was founded on a simple yet radical premise: that the most sophisticated culinary futures are written in our most ancient culinary pasts.</p>
+          <p className="text-white/60 leading-relaxed">Our kitchen serves as a living museum, where techniques from the 12th century are polished with 21st-century precision.</p>
+        </div>
+        <div className="space-y-12">
+          <div className="flex flex-col gap-2">
+            <span className="text-gold font-bold font-serif text-3xl">18+</span>
+            <p className="text-[10px] uppercase tracking-widest text-white/40">Years of research into heritage spice routes.</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="text-gold font-bold font-serif text-3xl">3</span>
+            <p className="text-[10px] uppercase tracking-widest text-white/40">Michelin standards of service across all locations.</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="text-gold font-bold font-serif text-3xl">100%</span>
+            <p className="text-[10px] uppercase tracking-widest text-white/40">Organic ingredients sourced from local artisan farms.</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
