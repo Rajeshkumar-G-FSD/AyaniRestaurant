@@ -1,0 +1,37 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif:wght@500;600;700&display=swap');
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Noto Serif", ui-serif, Georgia, serif;
+
+  --color-gold: #f2ca50;
+  --color-gold-dark: #d4af37;
+  --color-charcoal: #131313;
+  --color-charcoal-light: #201f1f;
+  
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+}
+
+@layer base {
+  body {
+    @apply bg-charcoal text-white font-sans antialiased;
+  }
+}
+
+.glass {
+  @apply bg-charcoal-light/40 backdrop-blur-xl border border-white/5;
+}
+
+.glass-card {
+  @apply bg-charcoal-light/20 backdrop-blur-lg border border-white/10 shadow-2xl;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
